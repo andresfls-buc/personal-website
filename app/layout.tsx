@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Outfit, Cinzel } from "next/font/google";
+import { Bricolage_Grotesque, Outfit } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/app/components/layout/SmoothScroll";
 
 const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+  variable: "--font-display",
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
   display: "swap",
@@ -15,12 +15,6 @@ const outfit = Outfit({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
-});
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-display",
 });
 
 export const metadata: Metadata = {
@@ -37,9 +31,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${outfit.variable} ${cinzel.variable} h-full antialiased`}
+      className={`${bricolage.variable} ${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background font-sans text-foreground">
+      <body className="min-h-full bg-[#f7f5f2] font-sans text-[#141414]">
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
