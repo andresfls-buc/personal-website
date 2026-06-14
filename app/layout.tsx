@@ -4,7 +4,7 @@ import "./globals.css";
 import SmoothScroll from "@/app/components/layout/SmoothScroll";
 
 const bricolage = Bricolage_Grotesque({
-  variable: "--font-display",
+  variable: "--font-bricolage",
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
   display: "swap",
