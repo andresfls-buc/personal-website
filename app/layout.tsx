@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Outfit } from "next/font/google";
+import { Bricolage_Grotesque, Outfit, Cinzel } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/app/components/layout/SmoothScroll";
 
@@ -17,6 +17,12 @@ const outfit = Outfit({
   display: "swap",
 });
 
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-display",
+});
+
 export const metadata: Metadata = {
   title: "Andres Landazabal — AI Software Engineer",
   description:
@@ -31,9 +37,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${outfit.variable} h-full antialiased`}
+      className={`${bricolage.variable} ${outfit.variable} ${cinzel.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#f7f5f2] font-sans text-[#141414]">
+      <body className="min-h-full bg-background font-sans text-foreground">
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

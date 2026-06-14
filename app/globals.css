@@ -15,17 +15,17 @@
 }
 
 @theme inline {
-  --color-background:     var(--background);
-  --color-background-alt: var(--background-alt);
-  --color-card:           var(--card);
-  --color-foreground:     var(--foreground);
-  --color-foreground-2:   var(--foreground-2);
-  --color-foreground-3:   var(--foreground-3);
-  --color-border:         var(--border);
-  --color-border-strong:  var(--border-strong);
-  --color-accent:         var(--accent);
-  --color-accent-hover:   var(--accent-hover);
-  --color-accent-soft:    var(--accent-soft);
+  --color-background:     #0a0806;
+  --color-background-alt: #110e09;
+  --color-card:           #1a1510;
+  --color-foreground:     #e8dcc8;
+  --color-foreground-2:   #a89880;
+  --color-foreground-3:   #6b5e4a;
+  --color-border:         #2a2318;
+  --color-border-strong:  #3d3426;
+  --color-accent:         #c9a84c;
+  --color-accent-hover:   #e0bc5a;
+  --color-accent-soft:    #2a2010;
 
   /* Type families — exposes font-sans + font-display utilities */
   --font-sans:    var(--font-sans),    ui-sans-serif, system-ui, sans-serif;
