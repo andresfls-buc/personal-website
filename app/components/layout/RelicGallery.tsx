@@ -72,7 +72,10 @@ export default function RelicGallery() {
       };
     });
 
-    return () => mm.revert();
+    return () => {
+      mm.revert();
+      ScrollTrigger.refresh();
+    };
   }, []);
 
   const setPlateRef = (id: string) => (el: HTMLDivElement | null) => {
