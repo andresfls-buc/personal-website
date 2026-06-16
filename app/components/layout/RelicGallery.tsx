@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { gsap, ScrollTrigger } from "@/lib/gsap";
 
 interface Relic {
   id: string;
@@ -40,7 +41,38 @@ export default function RelicGallery() {
   const plateRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   useEffect(() => {
-    // Animation wired in Task 2
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    const mm = gsap.matchMedia();
+
+    mm.add("(min-width: 768px)", () => {
+      const tweens = RELICS.map((relic) => {
+        const el = plateRefs.current.get(relic.id);
+        if (!el) return null;
+        return gsap.fromTo(
+          el,
+          { y: -40 * relic.depth },
+          {
+            y: 40 * relic.depth,
+            ease: "none",
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          }
+        );
+      });
+
+      return () => {
+        tweens.forEach((tween) => tween?.scrollTrigger?.kill());
+        tweens.forEach((tween) => tween?.kill());
+      };
+    });
+
+    return () => mm.revert();
   }, []);
 
   const setPlateRef = (id: string) => (el: HTMLDivElement | null) => {
