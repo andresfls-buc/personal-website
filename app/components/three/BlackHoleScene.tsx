@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useMemo, Suspense } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Stars, Preload } from "@react-three/drei";
+import { Stars, Preload, OrbitControls } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 // ─── GLSL Shaders ──────────────────────────────────────────────────────────
@@ -54,7 +54,6 @@ const DISK_FRAG = /* glsl */ `
 
     float angle = atan(vLocal.y, vLocal.x);
 
-    // Keplerian angular velocity — inner gas orbits faster
     float omega = 0.6 / pow(r, 1.5);
     float swept = angle - uTime * omega;
 
@@ -63,10 +62,8 @@ const DISK_FRAG = /* glsl */ `
     float g2 = fbm(uv * vec2(7.0,  2.0) - uTime * 0.015 + vec2(4.2, 1.7));
     float gas = g1 * 0.65 + g2 * 0.35;
 
-    // Relativistic beaming: approaching side is brighter
     float beam = pow(clamp(cos(angle) * 0.45 + 0.78, 0.25, 1.0), 3.0);
 
-    // Temperature ramp: white-hot inner → orange → deep crimson outer
     vec3 cHot  = vec3(3.0, 2.5, 1.8);
     vec3 cWarm = vec3(1.6, 0.45, 0.06);
     vec3 cCool = vec3(0.4, 0.03, 0.01);
@@ -139,66 +136,35 @@ function PhotonRing({ r }: { r: number }) {
 }
 
 // ─── Gravitational Lensing Ghost ───────────────────────────────────────────
-// Fakes the thin arc that appears above the black hole when far-side disk
-// light bends over the top of the event horizon (Interstellar effect).
 
 function LensingGhost() {
   return (
-    <mesh rotation={[Math.PI / 2 + 0.2, 0, -0.3]}>
-      <torusGeometry args={[2.4, 0.055, 16, 256]} />
-      <meshBasicMaterial
-        color={new THREE.Color(2.0, 0.6, 0.08)}
-        transparent
-        opacity={0.22}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </mesh>
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[2.35, 0.05, 16, 256]} />
+        <meshBasicMaterial
+          color={new THREE.Color(3.5, 1.6, 0.2)}
+          transparent
+          opacity={0.38}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[2.38, 0.12, 16, 256]} />
+        <meshBasicMaterial
+          color={new THREE.Color(2.0, 0.8, 0.1)}
+          transparent
+          opacity={0.12}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
   );
 }
 
-// ─── Dust Particles ────────────────────────────────────────────────────────
-
-function DustParticles() {
-  const COUNT = 3000;
-
-  const geo = useMemo(() => {
-    const positions = new Float32Array(COUNT * 3);
-    for (let i = 0; i < COUNT; i++) {
-      const radius = 2.2 + Math.random() * 6.0;
-      const angle  = Math.random() * Math.PI * 2;
-      const y      = (Math.random() - 0.5) * 0.4;
-      positions[i * 3]     = Math.cos(angle) * radius;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = Math.sin(angle) * radius;
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return g;
-  }, []);
-
-  const ref = useRef<THREE.Points>(null!);
-
-  useFrame((_, dt) => {
-    ref.current.rotation.y += dt * 0.06;
-  });
-
-  return (
-    <points ref={ref} geometry={geo}>
-      <pointsMaterial
-        color={new THREE.Color(2, 0.65, 0.1)}
-        size={0.025}
-        transparent
-        opacity={0.55}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        sizeAttenuation
-      />
-    </points>
-  );
-}
-
-// ─── Black Hole Assembly ────────────────────────────────────────────────────
+// ─── Black Hole Assembly ───────────────────────────────────────────────────
 
 function BlackHole() {
   const group = useRef<THREE.Group>(null!);
@@ -209,19 +175,17 @@ function BlackHole() {
 
   return (
     <group ref={group}>
-      {/* Event horizon — perfectly black sphere */}
       <mesh>
         <sphereGeometry args={[1.0, 64, 64]} />
-        <meshBasicMaterial color="black" />
+        <meshBasicMaterial color="black" side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Blue-purple glow bleeding around the horizon edge */}
       <mesh>
-        <sphereGeometry args={[1.08, 64, 64]} />
+        <sphereGeometry args={[1.09, 64, 64]} />
         <meshBasicMaterial
-          color={new THREE.Color(0.3, 0.1, 1.4)}
+          color={new THREE.Color(2.2, 0.8, 0.12)}
           transparent
-          opacity={0.1}
+          opacity={0.18}
           side={THREE.BackSide}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
@@ -231,21 +195,56 @@ function BlackHole() {
       <PhotonRing r={1.5} />
       <AccretionDisk inner={2.0} outer={5.5} />
       <LensingGhost />
-      <DustParticles />
     </group>
   );
 }
 
-// ─── Canvas export ─────────────────────────────────────────────────────────
+// ─── Scene Controller: OrbitControls + scroll-driven zoom ─────────────────
 
-export default function BlackHoleScene() {
+const CAM_START = new THREE.Vector3(0, 1.8, 11);
+const CAM_END   = new THREE.Vector3(0, 0.0, 1.05);
+const LOOK_AT   = new THREE.Vector3(0, 0, 0);
+
+function SceneController({ zoomRef }: { zoomRef?: React.RefObject<number> }) {
+  const { camera } = useThree();
+  const controlsRef = useRef<any>(null);
+
+  useFrame(() => {
+    const t = zoomRef?.current ?? 0;
+    const zooming = t > 0.01;
+
+    if (controlsRef.current) controlsRef.current.enabled = !zooming;
+
+    if (zooming) {
+      camera.position.lerpVectors(CAM_START, CAM_END, t);
+      camera.lookAt(LOOK_AT);
+    }
+  });
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableZoom={false}
+      enablePan={false}
+      enableDamping
+      dampingFactor={0.06}
+      rotateSpeed={0.5}
+      minPolarAngle={Math.PI * 0.15}
+      maxPolarAngle={Math.PI * 0.85}
+    />
+  );
+}
+
+// ─── Canvas export ────────────────────────────────────────────────────────
+
+export default function BlackHoleScene({ zoomRef }: { zoomRef?: React.RefObject<number> }) {
   return (
     <Canvas
-      camera={{ position: [0, 3.5, 10], fov: 42 }}
+      camera={{ position: [0, 1.8, 11], fov: 44 }}
       gl={{
         antialias: true,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.2,
+        toneMappingExposure: 1.3,
       }}
       dpr={[1, 2]}
       className="!absolute inset-0"
@@ -262,6 +261,7 @@ export default function BlackHoleScene() {
           speed={0.5}
         />
         <BlackHole />
+        <SceneController zoomRef={zoomRef} />
         <EffectComposer>
           <Bloom
             intensity={2.5}
