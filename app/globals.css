@@ -1,41 +1,55 @@
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════════════════════
+   ANDRES LANDAZABAL — Bloodborne-era portfolio
+   Palette: earthy hunter's-camp tones (pulled from a user-supplied
+   reference swatch) — warm tan & amber light over slate-grey void,
+   rust ember, ashen sage bone, olive dividers.
+   ════════════════════════════════════════════════════════════════ */
+
 :root {
-  --background:     #f7f5f2;   /* warm paper canvas    */
-  --background-alt: #efede7;   /* section variation    */
-  --card:           #ffffff;   /* elevated surfaces    */
-  --foreground:     #141414;   /* deep ink             */
-  --foreground-2:   #4f4d49;   /* secondary body       */
-  --foreground-3:   #8a8782;   /* muted / meta         */
-  --border:         #e5e2da;   /* hairlines            */
-  --border-strong:  #d2cec4;   /* dividers             */
-  --accent:         #5046e5;   /* electric indigo      */
-  --accent-hover:   #3f38c7;   /* indigo deepened      */
-  --accent-soft:    #e8e6ff;   /* indigo wash          */
+  --void:        #14171a;   /* deepest slate-grey         */
+  --void-2:      #1b1f23;   /* raised surface / section   */
+  --void-3:      #21262b;   /* card / panel               */
+  --ember-deep:  #5c3326;   /* dim ember in the fog       */
+  --ember:       #a85841;   /* ember mid (terracotta/rust)*/
+  --ember-bright:#e8a85c;   /* lit ember / accent (amber) */
+  --gold:        #ecd49b;   /* gold dust highlight (tan)  */
+  --bone:        #b7beae;   /* ashen bone text (headings) */
+  --bone-2:      #aab3a4;   /* secondary body (sage)      */
+  --bone-3:      #b08e7e;   /* muted / meta (taupe)       */
+  --border:      #2c2e22;   /* hairline                   */
+  --border-strong:#5b5f44;  /* lit divider (olive)        */
+  --arcane:      #424a55;   /* cold slate-blue accent     */
+  --arcane-deep: #262b32;   /* arcane shadow              */
 }
 
 @theme inline {
-  --color-background:     var(--background);
-  --color-background-alt: var(--background-alt);
-  --color-card:           var(--card);
-  --color-foreground:     var(--foreground);
-  --color-foreground-2:   var(--foreground-2);
-  --color-foreground-3:   var(--foreground-3);
-  --color-border:         var(--border);
-  --color-border-strong:  var(--border-strong);
-  --color-accent:         var(--accent);
-  --color-accent-hover:   var(--accent-hover);
-  --color-accent-soft:    var(--accent-soft);
+  --color-void:         var(--void);
+  --color-void-2:       var(--void-2);
+  --color-void-3:       var(--void-3);
+  --color-ember-deep:   var(--ember-deep);
+  --color-ember:        var(--ember);
+  --color-ember-bright: var(--ember-bright);
+  --color-gold:         var(--gold);
+  --color-bone:         var(--bone);
+  --color-bone-2:       var(--bone-2);
+  --color-bone-3:       var(--bone-3);
+  --color-border:       var(--border);
+  --color-border-strong:var(--border-strong);
+  --color-arcane:       var(--arcane);
+  --color-arcane-deep:  var(--arcane-deep);
 
-  /* Type families — exposes font-sans + font-display utilities */
-  --font-sans:    var(--font-sans),    ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  /* Type families — Cinzel (display) + EB Garamond (body) + IM Fell (diary) */
+  --font-display: var(--font-display), "Times New Roman", serif;
+  --font-body:    var(--font-body),    "Times New Roman", serif;
+  --font-fell:    var(--font-fell),    Georgia, serif;
 }
 
 html,
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--void);
+  color: var(--bone);
   overscroll-behavior: none;
 }
 
@@ -44,6 +58,56 @@ body {
 }
 
 ::selection {
-  background: var(--accent);
-  color: #ffffff;
+  background: var(--ember);
+  color: var(--void);
 }
+
+/* ── Atmospheric film grain (fixed overlay, multiply over everything) ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Vignette — pulls the eye inward like the painting's edges ── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+  background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 45%, rgba(20,23,26,0.55) 100%);
+}
+
+/* ── Utility: ember glow text ── */
+.text-ember-glow {
+  color: var(--ember-bright);
+  text-shadow: 0 0 30px rgba(232, 168, 92, 0.45);
+}
+
+/* ── Utility: drifting gold dust (decorative span with box-shadow motes) ── */
+@keyframes drift {
+  0%   { transform: translateY(0)      translateX(0);    opacity: 0.0; }
+  20%  { opacity: 0.9; }
+  100% { transform: translateY(-120px) translateX(40px); opacity: 0.0; }
+}
+
+/* ── Section eyebrow ── */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--ember);
+}
+
+/* ── Fluid type helpers ── */
+.display-xl { font-size: clamp(3.5rem, 9vw, 8rem);     line-height: 0.92; letter-spacing: 0.02em; }
+.h1         { font-size: clamp(2.5rem, 6vw, 5rem);     line-height: 1.0;  letter-spacing: 0.03em; }
+.h2         { font-size: clamp(1.9rem, 4vw, 3.4rem);   line-height: 1.08; letter-spacing: 0.04em; }
+.lead       { font-size: clamp(1.05rem, 1.4vw, 1.3rem);line-height: 1.7; }
